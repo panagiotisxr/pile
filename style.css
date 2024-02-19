@@ -1,0 +1,110 @@
+.cut {
+  height: 100px;
+  width: 100px;
+  margin: auto;
+}
+
+h1, #myHeader2 {
+  text-align: center;
+}
+
+.container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.results-section, .data-section {
+  border: 3px solid black;
+  border-radius: 10px;
+  margin-top: 15px;
+  margin-bottom: 15px;
+  padding: 10px;
+}
+
+button {
+  background: #fff;
+  border: none;
+  padding: 10px 30px;
+  display: inline-block;
+  font-size: 15px;
+  font-weight: 600;
+  width: 190px;
+  text-transform: uppercase;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: color 0.5s;
+}
+
+button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 100%;
+  left: 0;
+  background: rgb(78, 73, 73);
+  opacity: 0;
+  z-index: -1;
+  transition: all 0.5s;
+}
+
+button:hover {
+  color: #c5bdbd;
+}
+
+button:hover::before {
+  left: 0;
+  right: 0;
+  opacity: 1;
+}
+
+/* Table Styles */
+#resultsTable {
+  width: 100%;
+  border-collapse: collapse;
+  /* Removed fixed table layout to allow cells to adjust based on content */
+}
+
+#resultsTable th, #resultsTable td {
+  border: 1px solid #ddd;
+  text-align: left;
+  padding: 8px;
+  /* Removed word-wrap and max-width to allow content to define the cell width */
+  min-width: 50px; /* Ensures cells have a minimum width */
+}
+
+#resultsTable th {
+  background-color: #4CAF50;
+  color: white;
+}
+
+#resultsTable tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+/* Responsive Table */
+@media screen and (max-width: 600px) {
+  .container {
+      grid-template-columns: 1fr; /* Stacks the columns on smaller screens */
+  }
+  
+  th, td {
+      font-size: 14px; /* Adjusts font size for smaller screens */
+  }
+
+  .hide-on-mobile {
+      display: none; /* Hides less important columns on smaller screens */
+  }
+}
+/* Example CSS for specific column widths */
+.col-0 { width: 10%; }
+.col-1 { width: 10%; }
+.col-2 { width: 10%; }
+.col-3 { width: 10%; }
+.col-4 { width: 10%; }
+.col-5 { width: 10%; }
+.col-6 { width: 10%; }
+.col-7 { width: 15%; }
+.col-8 { width: 15%; }
