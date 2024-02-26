@@ -55,6 +55,40 @@
                     </tr>
                 </tbody>
             </table>
+            <div class="container">
+                <div class="Analysis-section">        
+                    <h2>Analysis</h2>   
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td>Analysis</td>
+                                <td><button class="button" id="submit-button" type="submit" py-Click="results_python()">Run</button></td>
+                            </tr>
+                            <tr>
+                                <td>Refresh Page</td>
+                                <td><button class="button" onClick="history.go(0);">Refresh</button></td>
+                            </tr>
+                            <tr>
+                                <td>Preselected values</td>
+                                <td><button class="button" type="button" onclick="stored_values()">Preselected values</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="container">
+                <div class="Upload data">        
+                    <h2>Upload .csv file <span style="font-size: 0.8em;">(<a target="_blank" rel="noopener" href="Data Example File.csv">Example file</a>)</span></h2>
+                    <div class="upload-container">
+                        <label for="csvFile">Upload CSV File</label>
+                        <input type="file" id="csvFile" accept=".csv" />
+                        <button type="button" onclick="handleCSVFileUpload()">Upload</button>
+                    </div>
+                </div>
+            </div>
+            
+            
             <table>
                 <tbody>
                     <h2>Number of Segments</h2>
@@ -108,36 +142,7 @@
             </table>
             
 
-            <div class="container">
-                <div class="Analysis-section">           
-                    <table>
-                        <tbody>
-                            <tr>
-                                <td>Analysis</td>
-                                <td><button class="button" id="submit-button" type="submit" py-Click="results_python()">Run</button></td>
-                            </tr>
-                            <tr>
-                                <td>Refresh Page</td>
-                                <td><button class="button" onClick="history.go(0);">Refresh</button></td>
-                            </tr>
-                            <tr>
-                                <td>Preselected values</td>
-                                <td><button class="button" type="button" onclick="stored_values()">Preselected values</button></td>
-                            </tr>
-
-                            <tr>
-                                <td>Upload Excel File</td>
-                                <td>
-                                    <div class="upload-container">
-                                        <input type="file" id="excelFile" accept=".xlsx, .xls" />
-                                        <button type="button" onclick="handleFileUpload()">Upload</button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+           
             <div id="uploadStatus"></div>
             <div id="uploadResults"></div>
             <script>
@@ -323,14 +328,4 @@ def results_python():
     </py-script>
 </body>
 </html>        
-
-
-
-    <!-- # Displaying results in HTML
-    document.getElementById('label1').innerText = str(R)
-    document.getElementById('label2').innerText = str(H)
-    document.getElementById('label3').innerText = str(ah)
-    document.getElementById('label4').innerText = str(av)
-    document.getElementById('label5').innerText = str(a_i)    
-    document.getElementById('label6').innerText = str(num_segments) -->
   
