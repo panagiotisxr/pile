@@ -296,7 +296,7 @@ def print_table(table_data, headers):
         print(row_format.format(*row))
         
 def results_python():
-    global analysis_run  # Use the global variable
+<!--     global analysis_run  # Use the global variable
 
     # Check if analysis has already been run
     if analysis_run:
@@ -305,7 +305,7 @@ def results_python():
         return
 
     # Set analysis_run to True since analysis is being run now
-    analysis_run = True
+    analysis_run = True -->
 
     pile_data, layer_parameters, num_segments = load_data()
     segmented_layers = divide_layers_into_segments(layer_parameters, num_segments)
