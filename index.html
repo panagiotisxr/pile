@@ -161,8 +161,11 @@
     </div>
     
 <py-script>
-from js import document
+from js import document, window, alert 
 from math import sin, tan, radians, pi, sqrt, asin
+
+# Define a global variable to track if analysis has been run
+analysis_run = False
 
 def load_data():
     num_layers = int(document.getElementById('numLayers').value)
@@ -293,6 +296,17 @@ def print_table(table_data, headers):
         print(row_format.format(*row))
         
 def results_python():
+    global analysis_run  # Use the global variable
+
+    # Check if analysis has already been run
+    if analysis_run:
+        # If already run, inform the user to refresh the page
+        alert("Analysis has already been run. Please refresh the page to perform a new calculation.")
+        return
+
+    # Set analysis_run to True since analysis is being run now
+    analysis_run = True
+
     pile_data, layer_parameters, num_segments = load_data()
     segmented_layers = divide_layers_into_segments(layer_parameters, num_segments)
 
