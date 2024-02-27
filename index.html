@@ -65,7 +65,7 @@
                                 <td><button class="button" id="submit-button" type="submit" py-Click="results_python()">Run</button></td>
                             </tr>
                             <tr>
-                                <td>Refresh Page</td>
+                                <td>Refresh Page (Please refresh page before new calculation) </td>
                                 <td><button class="button" onClick="history.go(0);">Refresh</button></td>
                             </tr>
                             <tr>
@@ -303,29 +303,40 @@ def results_python():
     print("-" * len(header_row))  # Divider
 
     total_QS = 0
+    total_QS_total=0
     for segment in segmented_layers:
         K_OE_up, _, _ = calculate_coefficients(pile_data, segment, segment['Z_UP'])
+        if K_OE_up  &lt  0:
+            K_OE_up = 0  # Set negative K_OE to zero
         K_OE_down, _, _ = calculate_coefficients(pile_data, segment, segment['Accumulated Height'])
+        if K_OE_down &lt 0:
+            K_OE_down = 0  # Set negative K_OE to zero
         avg_K_OE = (max(K_OE_up, 0) + max(K_OE_down, 0)) / 2
         delta_x = segment['Accumulated Height'] - segment['Z_UP']
         z_average = (segment['Z_UP'] + segment['Accumulated Height']) / 2
         QS = pi * 2 * pile_data['R'] * delta_x * pile_data['a_i'] * (segment['c'] + avg_K_OE * segment['γ'] * z_average * tan(radians(segment['φ_d'])))
+        Qs_for_tot = QS / (pi * (pile_data['R'] ** 2))
+
         total_QS += QS
+        total_QS_total += Qs_for_tot
+
+ 
+   
 
         # Print each segment's results in a row
         data_row = [str(segment['Layer']), f"{segment['Z_UP']:.2f}", f"{K_OE_up:.3f}", f"{segment['Accumulated Height']:.2f}",
                     f"{K_OE_down:.3f}", f"{avg_K_OE:.3f}", f"{delta_x:.2f}", f"{z_average:.2f}", f"{QS:.2f}"]
-        print(" | ".join(data_row))
+        print("        ".join(data_row))
 
     # Print total QS at the end
     print("-" * len(header_row))  # Divider for total
     print(f"Total QS: {total_QS:.2f} kN")
-
-    
+    print(f"q_s,tot: {total_QS_total:.2f} kPa")
     
     
     
     </py-script>
 </body>
 </html>        
-  
+
+
