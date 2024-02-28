@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Shaft Resistance Capacity of Axially Loaded Piles</title>
+    <link rel="icon" href="favicon.ico">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css">
+    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script src="excelProcessor.js"></script>
+
+</head>
+
+<body>
+    <div class="cut">
+        <img src="cut.jpg">
+    </div>
+    <h1>Shaft Resistance Capacity of Axially Loaded Piles</h1>
+    <h2 id="myHeader2">Online Calculator</h2>
+    <p>By Drs<strong> <a target="_blank" rel="noopener" href="https://scholar.google.com/citations?user=u5fbtlcAAAAJ&hl=en">Lysandros Pantelidis</a> </strong> and <strong><a target="_blank" rel="noopener" href="https://scholar.google.com/citations?user=R8zAApkAAAAJ&hl=en">Panagiotis Christodoulou</a></strong></p>
+    <p><strong>Cite as:</strong><a target="_blank" rel="noopener"> Pantelidis, L. (2022). Shaft resistance capacity of axially loaded piles in cohesive-frictional soils under static or pseudo-static conditions based on ground parameters.</a><a target="_blank" href="Shaft resistance capacity.pdf">(Link) </a></p>
+    <div class="container">
+        <div class="data-section">
+            <table>
+                <h2>Pile Data</h2>
+                <tbody>
+                    <tr>
+                        <td>Pile Radius [R]</td>
+                        <td><input type="number" id="R" name="Radius" min="0" placeholder="e.g. 0.5 m" step="0.1"></td>
+                        <td>m</td>
+                    </tr>
+                    <tr>
+                        <td>Pile Length [L]</td>
+                        <td><input type="number" id="H" name="Height" min="0" placeholder="e.g. 10 m" step="0.1"></td>
+                        <td>m</td>
+                    </tr>
+                    <tr>
+                        <td>Shear reduction coefficient [𝛼𝑖]</td>
+                        <td><input type="number" id="a_i" name="reduction_coefficient" min="0" placeholder="e.g. 1" step="0.5"></td>
+                    </tr>
+                </tbody>
+            </table>
+            <table>
+                <tbody>
+                    <h2>Seismic Coefficients</h2>
+                    <tr>
+                        <td>Seismic coefficient of horizontal acceleration [α<sub>h</sub>]</td>
+                        <td><input type="number" id="ah" name="Horizontal accel" placeholder="e.g. 0.3" step="0.05"></td>
+                    </tr>
+                    <tr>
+                        <td>Seismic coefficient of vertical acceleration [α<sub>v</sub>]</td>
+                        <td><input type="number" id="av" name="vertical_acceleration" placeholder="e.g. 0.15" step="0.05"></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="container">
+                <div class="Analysis-section">        
+                    <h2>Analysis</h2>   
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td>Analysis</td>
+                                <td><button class="button" id="submit-button" type="submit" py-Click="results_python()">Run</button></td>
+                            </tr>
+                            <tr>
+                                <td>Preselected values</td>
+                                <td><button class="button" type="button" onclick="stored_values()">Preselected values</button></td>
+                            </tr>
+                            <tr>
+                                <td>Clear All </td>
+                                <td><button class="button" onclick="clearAll()">Reset </button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="container">
+                <div class="Upload data">        
+                    <h2>Upload .csv file <span style="font-size: 0.8em;">(<a target="_blank" rel="noopener" href="Data template.csv">template</a>)</span></h2>
+                    <div class="upload-container">
+                        <label for="csvFile">Upload CSV File</label>
+                        <input type="file" id="csvFile" accept=".csv" />
+                        <button type="button" onclick="handleCSVFileUpload()">Upload</button>
+                    </div>
+                </div>
+            </div>          
+            <table>
+                <tbody>
+                    <h2>Number of Segments</h2>
+                    <tr>
+                        <td>Number of Segments of each layer</td>
+                        <td><input type="number" id="num_seg" name="Number_of_segments" min="0" placeholder="e.g. 5"></td>
+                    </tr>
+                </tbody>
+            </table>
+            <table>
+                <tbody>
+                    <h2>Number of Layers:</h2>
+                    <input type="number" id="numLayers" min="1" onchange="generateLayerRows()">
+                    <div class="container">
+                        <h2>Soil Properties</h2>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Δz (m)</th>
+                                    <th>Cohesion, c [kPa]</th>
+                                    <th>Friction angle, φ [°­­]</th>
+                                    <th>Unit weight, γ [kN/m³]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="layersTableBody"></tbody>
+                        </table>
+                    </div>
+                    <script>
+                        function generateLayerRows() {
+                            var numLayers = document.getElementById("numLayers").value;
+                            var tableBody = document.getElementById("layersTableBody");
+                            tableBody.innerHTML = ""; // Clear existing rows
+                            for (var i = 0; i < numLayers; i++) {
+                                var row = document.createElement("tr");
+                                var zCell = document.createElement("td");
+                                zCell.innerHTML = '<input type="number" id="Z_' + i + '" name="Layer_Height_' + i + '" min="0" placeholder="e.g. 3 m" step="0.5">';
+                                row.appendChild(zCell);
+                                var cPrimeCell = document.createElement("td");
+                                cPrimeCell.innerHTML = '<input type="number" id="c_' + i + '" name="Cohesion_' + i + '" min="0" placeholder="e.g. 20 kPa" step="5">';
+                                row.appendChild(cPrimeCell);
+                                var phiPrimeCell = document.createElement("td");
+                                phiPrimeCell.innerHTML = '<input type="number" id="φ_' + i + '" name="Friction_angle_' + i + '" min="0" placeholder="e.g. 30 °" step="5">';
+                                row.appendChild(phiPrimeCell);
+                                var gammaCell = document.createElement("td");
+                                gammaCell.innerHTML = '<input type="number" id="γ_' + i + '" name="Unit_Weight_' + i + '" min="0" placeholder="e.g. 20 kN/m³"step="5">';
+                                row.appendChild(gammaCell);
+                                tableBody.appendChild(row);
+                            }}
+                    </script>
+                </tbody>
+            </table>
+            
+
+           
+            <div id="uploadStatus"></div>
+            <div id="uploadResults"></div>
+            <script>
+                function stored_values() {
+                    document.getElementById("R").value = "0.5";
+                    document.getElementById("H").value = "10";
+                    document.getElementById("ah").value = "0";
+                    document.getElementById("av").value = "0";
+                    document.getElementById("a_i").value = "1";
+                    document.getElementById("num_seg").value = "5";
+                    document.getElementById("numLayers").value = "2";
+
+                    // Manually trigger the onchange event for numLayers
+                    var numLayersInput = document.getElementById("numLayers");
+                    if ("createEvent" in document) {
+                        var evt = document.createEvent("HTMLEvents");
+                        evt.initEvent("change", false, true);
+                        numLayersInput.dispatchEvent(evt);
+                    } else {
+                        numLayersInput.fireEvent("onchange");
+                    }
+                }
+            </script>
+        </div>
+
+    </div>
+    
+<py-script>
+from js import document, window, alert 
+from math import sin, tan, radians, pi, sqrt, asin
+
+#!-- # Define a global variable to track if analysis has been run
+#analysis_run = False -->
+
+def load_data():
+    num_layers_value = document.getElementById('numLayers').value
+    num_layers = int(num_layers_value) if num_layers_value else 1
+
+    num_segments_value = document.getElementById('num_seg').value
+    num_segments = int(num_segments_value) if num_segments_value else 5
+
+    pile_data = {
+        'R': float(document.getElementById('R').value) if document.getElementById('R').value else 0.5,
+        'H': float(document.getElementById('H').value) if document.getElementById('H').value else 10,
+        'ah': float(document.getElementById('ah').value) if document.getElementById('ah').value else 0,
+        'av': float(document.getElementById('av').value) if document.getElementById('av').value else 0,
+        'a_i': float(document.getElementById('a_i').value) if document.getElementById('a_i').value else 1,
+    }
+
+    layer_parameters = []
+    for i in range(num_layers):
+        Z_id = f'Z_{i}'
+        c_id = f'c_{i}'
+        phi_id = f'φ_{i}'  
+        gamma_id = f'γ_{i}' 
+        # Get the value of c (cohesion)
+        c = float(document.getElementById(c_id).value) if document.getElementById(c_id) else 0
+        # Check if c is 0, and if so, set it to a small non-zero value
+        if c == 0:
+            c = 0.0001
+        # Get the value of φ_d (friction angle)
+        phi_d = float(document.getElementById(phi_id).value) if document.getElementById(phi_id) else 0
+        # Check if φ_d is 0, and if so, set it to a small non-zero value
+        if phi_d == 0:
+            phi_d = 0.0001
+        # Get the value of γ (unit weight of soil)
+        gamma = float(document.getElementById(gamma_id).value) if document.getElementById(gamma_id) else 0
+        # Check if γ is 0, and if so, set it to a small non-zero value
+        if gamma == 0:
+            gamma = 0.0001
+        layer_data = {
+            'Z': float(document.getElementById(Z_id).value) if document.getElementById(Z_id) else 0,
+            'c': c,
+            'φ_d': phi_d,
+            'γ': gamma,
+        }
+        layer_parameters.append(layer_data)
+    
+    return pile_data, layer_parameters, num_segments
+    
+
+   
+def divide_layers_into_segments(layer_parameters, num_segments):
+    segmented_layers = []
+
+    accumulated_height = 0  # Initialize accumulated_height for accurate Z_UP and Z_DOWN calculation
+
+    for layer_data in layer_parameters:
+        layer_Z = layer_data['Z']
+        segment_height = layer_Z / num_segments
+        Z_DOWN = accumulated_height  # Initialize Z_DOWN for accurate Z_UP calculation
+
+        for i in range(num_segments):
+            segment_data = layer_data.copy()
+            Z_UP = Z_DOWN  # Set Z_UP to previous Z_DOWN
+            Z_DOWN += segment_height
+            segment_data['Z'] = segment_height
+            segment_data['Accumulated Height'] = Z_DOWN
+            segment_data['Layer'] = layer_parameters.index(layer_data) + 1
+            segment_data['Z_UP'] = Z_UP
+            segmented_layers.append(segment_data)
+
+        # Update accumulated_height for the next layer
+        accumulated_height = Z_DOWN
+
+    return segmented_layers    
+
+def calculate_coefficients(pile_data, segment_data, z_value):
+    if z_value == 0 or segment_data['Accumulated Height'] == 0:
+        return 0, 0, 0  # Set K_OE to 0 if z_value or Accumulated Height is 0
+    
+    φ_r = radians(segment_data['φ_d'])
+    ah_av = pile_data['ah'] / (1 - pile_data['av'])
+    Rankine_A = (1 - sin(φ_r)) / (1 + sin(φ_r))
+    Rankine_P = 1 / Rankine_A
+    Jaky = 1 - sin(φ_r)
+    mA = 1
+    ξA = (mA - 1) / (mA + 1) - 1
+
+    A0_A = (Rankine_A * (1 - ξA * sin(φ_r) + ah_av * tan(φ_r) * (2 + ξA * Jaky)))
+
+    if A0_A &lt  1:
+        λ = 1
+    else:
+        λ = 0
+
+    two_λ_1 = (2 * λ - 1)
+    B1_A = ((two_λ_1 * 2 * segment_data['c'] / ((1 - pile_data['av']) * (segment_data['γ'] * z_value))) * tan(pi / 4 - φ_r / 2))
+
+    e1 = ((1 - A0_A) / B1_A)
+    e2 = (1 + A0_A) / (two_λ_1 * B1_A) + 2 * segment_data['c'] / ((1 - pile_data['av']) * segment_data['γ'] * z_value * two_λ_1 * B1_A * tan(φ_r))
+
+    α0 = (1 + (e2 ** 2) * (tan(φ_r)) ** 2)
+    b0 = (1 - (2 * two_λ_1 * e1 * e2 + e2 ** 2) * (tan(φ_r)) ** 2)
+    c0 = (e1 ** 2 + 2 * two_λ_1 * e1 * e2) * (tan(φ_r)) ** 2
+    d0 = (-e1 ** 2 * (tan(φ_r)) ** 2)
+
+    D0 = (b0 ** 2 - 3 * α0 * c0)
+    D1 = (2 * b0 ** 3 - 9 * α0 * b0 * c0 + 27 * α0 ** 2 * d0)
+    IMSQRT = ((((D1 ** 2) - (4 * (D0 ** 3)))) ** 0.5)
+    D1_sqrt = ((D1 - IMSQRT) / 2)
+    C0 = (D1_sqrt ** (1 / 3))
+    ζ = complex(-0.5, (sqrt(3)) / 2)
+    ζ_λ_C0 = ((ζ ** λ) * C0)
+
+    twoλ_1_3α0 = (-1 / (3 * two_λ_1 * α0))
+
+    D0_ζλC0 = (D0 / ζ_λ_C0)
+
+    bo_ζλC0 = (b0 + ζ_λ_C0 + D0_ζλC0)
+
+    colV_colX = (bo_ζλC0.real * twoλ_1_3α0.real)
+
+    φm = (asin(colV_colX))
+    φm_deg = (φm * (180 / pi))
+
+    cm_o = (segment_data['c'] * tan(φm) / tan(φ_r))
+
+    Κ_OE = ((1 - two_λ_1 * sin(φm)) / (1 + two_λ_1 * sin(φm)) - two_λ_1 * 2 * cm_o * tan(pi / 4 - two_λ_1 * φm / 2) / (segment_data['γ'] * z_value * (1 - pile_data['av'])))
+    σ_ΧΕ = (Κ_OE * (1 - pile_data['av']) * segment_data['γ'] * z_value)
+
+    return Κ_OE, φm_deg, σ_ΧΕ
+
+def print_table(table_data, headers):
+    # Find the maximum width for each column
+    col_widths = [len(header) for header in headers]
+    for row in table_data:
+        for idx, cell in enumerate(row):
+            col_widths[idx] = max(col_widths[idx], len(str(cell)))
+
+    # Create a format string with dynamic padding
+    row_format = " | ".join(["{:<" + str(width) + "}" for width in col_widths])
+
+    # Print the header
+    print(row_format.format(*headers))
+    print("-" * (sum(col_widths) + len(col_widths) * 3 - 1))  # Adjust for the separators
+
+    # Print the rows
+    for row in table_data:
+        print(row_format.format(*row))
+        
+def results_python():
+    # global analysis_run  # Use the global variable
+
+    # Check if analysis has already been run
+    #if analysis_run:
+        #alert("Analysis has already been run. Please refresh the page to perform a new calculation.")
+        #return
+
+    # Set analysis_run to True since analysis is being run now
+    #analysis_run = True 
+
+    pile_data, layer_parameters, num_segments = load_data()
+    segmented_layers = divide_layers_into_segments(layer_parameters, num_segments)
+
+    # Prepare the header
+    headers = ["Layer", "Z Up [m]", "K OE, Up", "Z Down [m]", "K OE, Down", "Average K OE", "Delta z [m]", "Z Average [m]", "QS [kN]"]
+    header_row = " | ".join(headers)
+    print(header_row)
+    print("-" * len(header_row))  # Divider
+
+    total_QS = 0
+    total_QS_total=0
+    for segment in segmented_layers:
+        K_OE_up, _, _ = calculate_coefficients(pile_data, segment, segment['Z_UP'])
+        if K_OE_up  &lt  0:
+            K_OE_up = 0  # Set negative K_OE to zero
+        K_OE_down, _, _ = calculate_coefficients(pile_data, segment, segment['Accumulated Height'])
+        if K_OE_down &lt 0:
+            K_OE_down = 0  # Set negative K_OE to zero
+        avg_K_OE = (max(K_OE_up, 0) + max(K_OE_down, 0)) / 2
+        delta_x = segment['Accumulated Height'] - segment['Z_UP']
+        z_average = (segment['Z_UP'] + segment['Accumulated Height']) / 2
+        QS = pi * 2 * pile_data['R'] * delta_x * pile_data['a_i'] * (segment['c'] + avg_K_OE * segment['γ'] * z_average * tan(radians(segment['φ_d'])))
+        Qs_for_tot = QS / (pi * (pile_data['R'] ** 2))
+
+        total_QS += QS
+        total_QS_total += Qs_for_tot
+
+ 
+   
+
+        # Print each segment's results in a row
+        data_row = [str(segment['Layer']), f"{segment['Z_UP']:.2f}", f"{K_OE_up:.3f}", f"{segment['Accumulated Height']:.2f}",
+                    f"{K_OE_down:.3f}", f"{avg_K_OE:.3f}", f"{delta_x:.2f}", f"{z_average:.2f}", f"{QS:.2f}"]
+        print("        ".join(data_row))
+
+    # Print total QS at the end
+    print("-" * len(header_row))  # Divider for total
+    print(f"Total QS: {total_QS:.2f} kN")
+    print(f"q_s,tot: {total_QS_total:.2f} kPa")
+    
+    
+    
+    </py-script>
+</body>
+</html>        
+
+
