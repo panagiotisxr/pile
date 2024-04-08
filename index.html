@@ -10,6 +10,10 @@
     <script defer src="https://pyscript.net/latest/pyscript.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script src="excelProcessor.js"></script>
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
 </head>
 
@@ -85,8 +89,22 @@
                         <input type="file" id="csvFile" accept=".csv" />
                         <button type="button" onclick="handleCSVFileUpload()">Upload</button>
                     </div>
+                    <div class="filtering-container">
+                        <label>Data Filtering</label>
+                        <input type="radio" id="filterYes" name="filterOption" value="yes">
+                        <label for="filterYes">Yes</label>
+                        <input type="radio" id="filterNo" name="filterOption" value="no" checked>
+                        <label for="filterNo">No</label>
+                    </div>                        
+                    <div id="subgroupInput" style="display: none;">
+                        <label for="numSubgroups"> Number of Subgroups:</label>
+                        <input type="number" id="numSubgroups" min="2" placeholder="e.g. 5 (preselected)">
+                        <label><input type="checkbox" id="filterCohesion" checked> Filter Cohesion (c)</label>
+                        <label><input type="checkbox" id="filterFrictionAngle" checked> Filter Friction Angle (φ)</label>                       
+                    </div>                   
                 </div>
             </div>          
+                   
             <table>
                 <tbody>
                     <h2>Number of Segments</h2>
@@ -109,6 +127,7 @@
                                     <th>Cohesion, c [kPa]</th>
                                     <th>Friction angle, φ [°­­]</th>
                                     <th>Unit weight, γ [kN/m³]</th>
+                                    <!-- <th> SBTn (Robertson 1990)</th> -->
                                 </tr>
                             </thead>
                             <tbody id="layersTableBody"></tbody>
@@ -130,9 +149,16 @@
                                 var phiPrimeCell = document.createElement("td");
                                 phiPrimeCell.innerHTML = '<input type="number" id="φ_' + i + '" name="Friction_angle_' + i + '" min="0" placeholder="e.g. 30 °" step="5">';
                                 row.appendChild(phiPrimeCell);
+
                                 var gammaCell = document.createElement("td");
                                 gammaCell.innerHTML = '<input type="number" id="γ_' + i + '" name="Unit_Weight_' + i + '" min="0" placeholder="e.g. 20 kN/m³"step="5">';
                                 row.appendChild(gammaCell);
+                                
+    //                             if (isCsvUpload) {
+    //                                 var SBTCell = document.createElement("td");
+    //                                 SBTCell.innerHTML = '<input type="number" id="SBT_' + i + '" name="SBT_' + i + '" min="1" max="9" placeholder="e.g. 1 or blank "step="1">';
+    //                                 row.appendChild(SBTCell);
+    // }
                                 tableBody.appendChild(row);
                             }}
                     </script>
@@ -167,7 +193,26 @@
         </div>
 
     </div>
+    <script>
+        document.getElementById('filterYes').addEventListener('change', function() {
+            var subgroupInput = document.getElementById('subgroupInput');
+            subgroupInput.style.display = this.checked ? 'inline-block' : 'none';
+            });
+        document.getElementById('filterNo').addEventListener('change', function() {
+        var subgroupInput = document.getElementById('subgroupInput');
+        subgroupInput.style.display = 'none';
+          });
     
+        document.getElementById('submit-button').addEventListener('click', function() {
+            var filterYes = document.getElementById('filterYes');
+            var numSubgroups = document.getElementById('numSubgroups');
+        });
+    </script>
+<!-- Placeholder for missing data corrections -->
+<div id="missingDataSection"></div>
+<!-- Placeholder for SBT reference table -->
+<div id="sbtReferenceSection"></div>
+
 <py-script>
 from js import document, window, alert 
 from math import sin, tan, radians, pi, sqrt, asin
@@ -175,12 +220,54 @@ from math import sin, tan, radians, pi, sqrt, asin
 #!-- # Define a global variable to track if analysis has been run
 #analysis_run = False -->
 
+# Function to perform linear interpolation
+def linear_interpolation(data, within_limits):
+    interpolated_data = data.copy()
+    indices_to_interpolate = [i for i, value in enumerate(within_limits) if not value]
+    
+    for i in indices_to_interpolate:
+        # Find the closest True values before and after the current index
+        prev_index = max([idx for idx in range(i, -1, -1) if within_limits[idx]], default=0)
+        next_index = min([idx for idx in range(i, len(within_limits)) if within_limits[idx]], default=len(within_limits) - 1)
+        
+        # Perform linear interpolation
+        x0, y0 = prev_index, data[prev_index]
+        x1, y1 = next_index, data[next_index]
+        interpolated_data[i] = y0 + (y1 - y0) * (i - x0) / (x1 - x0)
+
+    return interpolated_data
+
+def standard_deviation(data):
+    n = len(data)
+    if n < 2:
+        return 0
+    mean = sum(data) / n
+    variance = sum((x - mean) ** 2 for x in data) / (n - 1)
+    return variance ** 0.5
+
+def median(data):
+    sorted_data = sorted(data)
+    n = len(sorted_data)
+    if n % 2 == 0:
+        return (sorted_data[n//2 - 1] + sorted_data[n//2]) / 2
+    else:
+        return sorted_data[n//2]
+        
 def load_data():
+    filter_yes = document.getElementById('filterYes').checked
+    filter_no = document.getElementById('filterNo').checked
+
     num_layers_value = document.getElementById('numLayers').value
     num_layers = int(num_layers_value) if num_layers_value else 1
 
     num_segments_value = document.getElementById('num_seg').value
     num_segments = int(num_segments_value) if num_segments_value else 5
+
+    num_Subgroups_value = document.getElementById('numSubgroups').value
+    num_Subgroups = int(num_Subgroups_value) if num_Subgroups_value else 5
+    
+    filter_cohesion = document.getElementById('filterCohesion').checked
+    filter_friction_angle = document.getElementById('filterFrictionAngle').checked
 
     pile_data = {
         'R': float(document.getElementById('R').value) if document.getElementById('R').value else 0.5,
@@ -191,7 +278,7 @@ def load_data():
     }
 
     layer_parameters = []
-    for i in range(num_layers):
+    for i in range(1,num_layers+1):
         Z_id = f'Z_{i}'
         c_id = f'c_{i}'
         phi_id = f'φ_{i}'  
@@ -206,6 +293,8 @@ def load_data():
         # Check if φ_d is 0, and if so, set it to a small non-zero value
         if phi_d == 0:
             phi_d = 0.0001
+        if phi_d > 45:
+            phi_d = 45      
         # Get the value of γ (unit weight of soil)
         gamma = float(document.getElementById(gamma_id).value) if document.getElementById(gamma_id) else 0
         # Check if γ is 0, and if so, set it to a small non-zero value
@@ -218,9 +307,101 @@ def load_data():
             'γ': gamma,
         }
         layer_parameters.append(layer_data)
-    
+        # Print the c values
+    if filter_yes:
+        if filter_cohesion:
+            c_values = [layer_data['c'] for layer_data in layer_parameters]
+            c_groups = [c_values[i:i+num_Subgroups] for i in range(0, len(c_values), num_Subgroups)]
+            # Calculate the median and standard deviation for each group
+            medians = [median(group) for group in c_groups]
+            sample_std_deviations = [standard_deviation(group) for group in c_groups]
+            if sample_std_deviations:
+                half_si_si_plus_1 = [(sample_std_deviations[i] + sample_std_deviations[i+1]) / 2 for i in range(len(sample_std_deviations) - 1)]
+                half_si_minus_1_si_plus_1 = [(sample_std_deviations[i-1] + sample_std_deviations[i+1]) / 2 for i in range(1, len(sample_std_deviations) - 1)]
+                half_si_si_minus_1 = [(sample_std_deviations[i] + sample_std_deviations[i-1]) / 2 for i in range(1, len(sample_std_deviations))]
+            else:
+                # Handle the case when sample_std_deviations is empty
+                half_si_si_plus_1 = []
+                half_si_minus_1_si_plus_1 = []
+                half_si_si_minus_1 = []
+            # Initialize the data list with the first group's data, which doesn't have the two previous std devs
+            data_in_columns_with_min = [(round(half_si_si_plus_1[0], 3), 'None', 'None', round(half_si_si_plus_1[0], 3))]
+            # Add the rest of the data with the calculated minimum values
+            for i in range(1, len(half_si_si_plus_1)):
+                min_value = round(min(
+                    half_si_si_plus_1[i],
+                    half_si_minus_1_si_plus_1[i-1] if i-1 < len(half_si_minus_1_si_plus_1) else float('inf'),
+                    half_si_si_minus_1[i-1]), 3)
+                data_in_columns_with_min.append((round(half_si_si_plus_1[i], 3), 
+                                                round(half_si_minus_1_si_plus_1[i-1], 3) if i-1 < len(half_si_minus_1_si_plus_1) else 'None', 
+                                                round(half_si_si_minus_1[i-1], 3) if i-1 < len(half_si_si_minus_1) else 'None', 
+                                                min_value))
+            # Add the last group which doesn't have the next std devs
+            last_group_min_value = round(half_si_si_minus_1[-1], 3)
+            data_in_columns_with_min.append(('None','None', last_group_min_value,last_group_min_value))
+            # Calculate Md+Sd and Md-Sd for each group
+            md_plus_sd = [round(medians[i] + data_in_columns_with_min[i][3], 3) for i in range(len(medians))]
+            md_minus_sd = [round(medians[i] - data_in_columns_with_min[i][3], 3) for i in range(len(medians))] 
+            # Check if each data point is within Md+Sd and Md-Sd and create the table data
+            table_data = []
+            for group_index, (group, md_p_sd, md_m_sd) in enumerate(zip(c_groups, md_plus_sd, md_minus_sd)):
+                for data_point in group:
+                    within_limits = md_m_sd <= data_point <= md_p_sd
+                    table_data.append([group_index+1, data_point, within_limits])
+            # Perform linear interpolation on the data points
+            within_limits = [item[2] for item in table_data]
+            # Perform linear interpolation on the data points
+            interpolated_data = linear_interpolation(c_values, within_limits)
+            # Update layer parameters with interpolated c values
+            for i, layer_data in enumerate(layer_parameters):
+                layer_data['c'] = interpolated_data[i]
+            # Print the interpolated data
+            print("Filtered Cohesion Data:")
+            print(interpolated_data)    
+            
+        if filter_friction_angle:
+            phi_values = [layer_data['φ_d'] for layer_data in layer_parameters]
+            phi_groups = [phi_values[i:i+num_Subgroups] for i in range(0, len(phi_values), num_Subgroups)]
+            phi_medians = [median(group) for group in phi_groups]
+            phi_std_deviations = [standard_deviation(group) for group in phi_groups]
+            if phi_std_deviations:
+                half_si_si_plus_1_phi = [(phi_std_deviations[i] + phi_std_deviations[i+1]) / 2 for i in range(len(phi_std_deviations) - 1)]
+                half_si_minus_1_si_plus_1_phi = [(phi_std_deviations[i-1] + phi_std_deviations[i+1]) / 2 for i in range(1, len(phi_std_deviations) - 1)]
+                half_si_si_minus_1_phi = [(phi_std_deviations[i] + phi_std_deviations[i-1]) / 2 for i in range(1, len(phi_std_deviations))]
+            else:
+                half_si_si_plus_1_phi = []
+                half_si_minus_1_si_plus_1_phi = []
+                half_si_si_minus_1_phi = []
+            # Initialize φ_d data with min values, akin to c value processing
+            data_in_columns_with_min_phi = [(round(half_si_si_plus_1_phi[0], 3), 'None', 'None', round(half_si_si_plus_1_phi[0], 3))]
+            for i in range(1, len(half_si_si_plus_1_phi)):
+                min_value_phi = round(min(
+                    half_si_si_plus_1_phi[i],
+                    half_si_minus_1_si_plus_1_phi[i-1] if i-1 < len(half_si_minus_1_si_plus_1_phi) else float('inf'),
+                    half_si_si_minus_1_phi[i-1]), 3)
+                data_in_columns_with_min_phi.append((round(half_si_si_plus_1_phi[i], 3), 
+                                                    round(half_si_minus_1_si_plus_1_phi[i-1], 3) if i-1 < len(half_si_minus_1_si_plus_1_phi) else 'None', 
+                                                    round(half_si_si_minus_1_phi[i-1], 3) if i-1 < len(half_si_si_minus_1_phi) else 'None', 
+                                                    min_value_phi))
+            last_group_min_value_phi = round(half_si_si_minus_1_phi[-1], 3)
+            data_in_columns_with_min_phi.append(('None', 'None', last_group_min_value_phi, last_group_min_value_phi))
+            md_plus_sd_phi = [round(phi_medians[i] + data_in_columns_with_min_phi[i][3], 3) for i in range(len(phi_medians))]
+            md_minus_sd_phi = [round(phi_medians[i] - data_in_columns_with_min_phi[i][3], 3) for i in range(len(phi_medians))]
+            # Check if each φ_d data point is within Md+Sd and Md-Sd
+            table_data_phi = []
+            for group_index, (group, md_p_sd, md_m_sd) in enumerate(zip(phi_groups, md_plus_sd_phi, md_minus_sd_phi)):
+                for data_point in group:
+                    within_limits_phi = md_m_sd <= data_point <= md_p_sd
+                    table_data_phi.append([group_index+1, data_point, within_limits_phi])
+            # Perform linear interpolation on the φ_d data points
+            within_limits_phi = [item[2] for item in table_data_phi]
+            interpolated_phi = linear_interpolation(phi_values, within_limits_phi)
+            for i, layer_data in enumerate(layer_parameters):
+                layer_data['φ_d'] = interpolated_phi[i]
+            print("Filtered Friction Angle Data:")
+            print(interpolated_phi)
+                        
     return pile_data, layer_parameters, num_segments
-    
 
    
 def divide_layers_into_segments(layer_parameters, num_segments):
@@ -262,7 +443,7 @@ def calculate_coefficients(pile_data, segment_data, z_value):
 
     A0_A = (Rankine_A * (1 - ξA * sin(φ_r) + ah_av * tan(φ_r) * (2 + ξA * Jaky)))
 
-    if A0_A &lt  1:
+    if A0_A <  1:
         λ = 1
     else:
         λ = 0
@@ -346,10 +527,10 @@ def results_python():
     total_QS_total=0
     for segment in segmented_layers:
         K_OE_up, _, _ = calculate_coefficients(pile_data, segment, segment['Z_UP'])
-        if K_OE_up  &lt  0:
+        if K_OE_up  <  0:
             K_OE_up = 0  # Set negative K_OE to zero
         K_OE_down, _, _ = calculate_coefficients(pile_data, segment, segment['Accumulated Height'])
-        if K_OE_down &lt 0:
+        if K_OE_down < 0:
             K_OE_down = 0  # Set negative K_OE to zero
         avg_K_OE = (max(K_OE_up, 0) + max(K_OE_down, 0)) / 2
         delta_x = segment['Accumulated Height'] - segment['Z_UP']
