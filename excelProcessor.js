@@ -139,7 +139,6 @@ function checkAndProcessData() {
 }
 
 
-
 // Ensure to call checkAndProcessData at the end of your saveAllCorrections function:
 function saveAllCorrections() {
     const inputs = document.querySelectorAll('#missingDataSection input');
@@ -157,7 +156,10 @@ function saveAllCorrections() {
             globalDataset[rowIndex][columnIndex] = updatedValue;
         }
     });
-
+    const referenceSection = document.getElementById('sbtReferenceSection');
+    if (referenceSection) {
+        referenceSection.innerHTML = '';
+    }
     document.getElementById('missingDataSection').innerHTML = ''; // Clear the section
     document.getElementById('uploadStatus').innerHTML = 'Corrections saved successfully.';
 
@@ -242,47 +244,55 @@ function populateTableFromDataset() {
 
 
 function createSBTReferenceTable() {
-    const referenceSection = document.getElementById('sbtReferenceSection'); // Assumed to be the container for the reference table
-    referenceSection.innerHTML = ''; // Clear previous content
+    const referenceSection = document.getElementById('sbtReferenceSection');
+    referenceSection.innerHTML = '';
 
-    // Create the reference table header
-    const referenceHeader = document.createElement('h3');
-    referenceHeader.textContent = 'Typical Soil Properties Based on Their SBTn';
-    referenceSection.appendChild(referenceHeader);
-
-    // Create the reference table
     const table = document.createElement('table');
-    table.className = 'reference-table'; // Add your table styling class here
+    table.className = 'reference-table'; // Add your own styling class here
 
-    // Add a header to the table
+    // Create the header
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
-    const headers = ['SBTn','SBT Descrip.', 'USCS Desig.', 'Cohesion (kPa)', 'Friction Angle (°)', 'Unit Weight (kN/m³)'];
+    const headers = [
+        'SBTn Zone',
+        'Common SBT Description',
+        'USCS Designation',
+        'c min (kPa)',
+        'c max (kPa)',
+        'φ min (°)',
+        'φ max (°)',
+        'γ min (kN/m³)',
+        'γ max (kN/m³)'
+    ];
+
     headers.forEach(headerText => {
         const headerCell = document.createElement('th');
-        headerCell.textContent = headerText;
+        headerCell.innerHTML = headerText; // We can use innerHTML since we control the content
         headerRow.appendChild(headerCell);
     });
     thead.appendChild(headerRow);
     table.appendChild(thead);
 
-    // Add body to the table
+    // Create the body of the table
     const tbody = document.createElement('tbody');
-
-    // Assuming you have an array of typical values based on SBT
     const sbtValues = [
-        { SBT: '1',Descr:'Sensitive fine grained',USCS:'ML or CL', cohesion: '8.5', frictionAngle: '24.5', unitWeight: '17.5' },
-        { SBT: '2',Descr:'Clay - Organic soil',USCS:'OL', cohesion: '2.5', frictionAngle: '2.5', unitWeight: '12.5' },
-        { SBT: '3',Descr:'Clays: clay to silty clay',USCS:'CL', cohesion: '15', frictionAngle: '21', unitWeight: '18' },
-        { SBT: '4',Descr:'Silt mixtures: Clayey silt and silty clay',USCS:'ML or CL', cohesion: '8.5', frictionAngle: '24.5', unitWeight: '17.5' },
-        { SBT: '5',Descr:'Sand mixtures: Silty sand to sandy silt',USCS:'SM', cohesion: '7.5', frictionAngle: '31.5', unitWeight: '19.5' },
-        { SBT: '6',Descr:'Sands: clean sands to silty sands',USCS:'SP to SM', cohesion: '3.5', frictionAngle: '33.5', unitWeight: '20' },
-        { SBT: '7',Descr:'Dense sand to gravelly sand',USCS:'GW to GP', cohesion: '0', frictionAngle: '40.5', unitWeight: '21.5' },
-        { SBT: '8',Descr:'Stiff sand to clayey sand',USCS:'SC', cohesion: '10', frictionAngle: '29.5', unitWeight: '19.5' },
-        { SBT: '9',Descr:'Stiff fine grained',USCS:'CL or CH', cohesion: '22.5', frictionAngle: '16.5', unitWeight: '18' },
-    ];
+        { SBT: '1', Descr: 'Sensitive fine grained', USCS: 'ML or CL - (ML)', cMin: '0', cMax: '5', phiMin: '26', phiMax: '30', gammaMin: '15', gammaMax: '19' },
+        { SBT: '1', Descr: 'Sensitive fine grained', USCS: 'ML or CL - (CL)', cMin: '10', cMax: '20', phiMin: '15', phiMax: '27', gammaMin: '16', gammaMax: '20' },
+        { SBT: '2', Descr: 'Clay - Organic soil', USCS: 'OL', cMin: '0', cMax: '5', phiMin: '0', phiMax: '5', gammaMin: '10', gammaMax: '15' },
+        { SBT: '3', Descr: 'Clays: clay to silty clay', USCS: 'CL', cMin: '10', cMax: '20', phiMin: '15', phiMax: '27', gammaMin: '16', gammaMax: '20' },
+        { SBT: '4', Descr: 'Silt mixtures: Clayey silt and silty clay', USCS: 'ML or CL - (ML)', cMin: '0', cMax: '5', phiMin: '26', phiMax: '30', gammaMin: '15', gammaMax: '19' },
+        { SBT: '4', Descr: 'Silt mixtures: Clayey silt and silty clay', USCS: 'ML or CL - (CL)', cMin: '10', cMax: '20', phiMin: '15', phiMax: '27', gammaMin: '16', gammaMax: '20' },
+        { SBT: '5', Descr: 'Sand mixtures: Silty sand to sandy silt', USCS: 'SM', cMin: '0', cMax: '15', phiMin: '29', phiMax: '34', gammaMin: '18', gammaMax: '21' },
+        { SBT: '6', Descr: 'Sands: clean sands to silty sands', USCS: 'SP-SM - SP', cMin: '0', cMax: '0', phiMin: '33', phiMax: '38', gammaMin: '19', gammaMax: '22' },
+        { SBT: '6', Descr: 'Sands: clean sands to silty sands', USCS: 'SP-SM - SM', cMin: '0', cMax: '15', phiMin: '29', phiMax: '34', gammaMin: '18', gammaMax: '21' },
+        { SBT: '7', Descr: 'Dense sand to gravelly sand', USCS: 'GW-GP - GW', cMin: '0', cMax: '0', phiMin: '38', phiMax: '45', gammaMin: '20', gammaMax: '23' },
+        { SBT: '7', Descr: 'Dense sand to gravelly sand', USCS: 'GW-GP - GP', cMin: '0', cMax: '0', phiMin: '36', phiMax: '44', gammaMin: '20', gammaMax: '23' },
+        { SBT: '8', Descr: 'Stiff sand to clayey sand - Overconsolidated or cemented', USCS: 'SC', cMin: '0', cMax: '20', phiMin: '27', phiMax: '32', gammaMin: '18', gammaMax: '21' },
+        { SBT: '9', Descr: 'Stiff fine grained - Overconsolidated or cemented', USCS: 'CL-CH - CL', cMin: '10', cMax: '20', phiMin: '15', phiMax: '27', gammaMin: '16', gammaMax: '20' },
+        { SBT: '9', Descr: 'Stiff fine grained - Overconsolidated or cemented', USCS: 'CL-CH - CH', cMin: '20', cMax: '40', phiMin: '9', phiMax: '15', gammaMin: '16', gammaMax: '20' },
 
-    // Populate the table with SBT values
+            ];
+
     sbtValues.forEach(sbtValue => {
         const row = document.createElement('tr');
         Object.values(sbtValue).forEach(val => {
@@ -294,6 +304,6 @@ function createSBTReferenceTable() {
     });
 
     table.appendChild(tbody);
-    referenceSection.appendChild(table); // Add the table to the reference section
+    referenceSection.appendChild(table); // Append the table to the container
 }
 
