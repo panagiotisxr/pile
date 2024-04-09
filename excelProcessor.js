@@ -53,24 +53,9 @@ function processDataFromCSV(csvData) {
         displayMissingDataRows(rowsWithMissingData);
     } else {
         // If no missing data, proceed to render the table
-        renderTable();
+        checkAndProcessData();
     }
 }
-
-function renderTable() {
-    const tableBody = document.getElementById('layersTableBody');
-    tableBody.innerHTML = '';  // Clear existing table rows
-    globalDataset.forEach((row, rowIndex) => {
-        const tr = document.createElement('tr');  // Create a new row
-        row.forEach((cellData, cellIndex) => {
-            const td = document.createElement('td');  // Create a new cell
-            td.innerText = cellData;  // Set cell text to data
-            tr.appendChild(td);  // Add cell to row
-        });
-        tableBody.appendChild(tr);  // Add row to table body
-    });
-}
-
 
 
 function displayMissingDataRows(rowsWithMissingData) {
