@@ -35,3 +35,53 @@ body {
   background-color: rgba(0,0,0,0.4); 
 }
 
+/* General styling for the reference table */
+.reference-table {
+  width: 100%; /* Full width */
+  border-collapse: collapse; /* Collapse borders */
+  margin-top: 20px; /* Margin at the top for spacing */
+  text-align: left; /* Align text to the left */
+}
+
+/* Styling for the table header */
+.reference-table thead {
+  background-color: #f2f2f2; /* Light grey background */
+  color: #333; /* Dark grey text */
+}
+
+.reference-table thead th {
+  padding: 10px; /* Padding inside header cells */
+  border-bottom: 2px solid #ddd; /* Bottom border for header cells */
+}
+
+/* Styling for the table body rows and cells */
+.reference-table tbody td {
+  padding: 8px; /* Padding inside cells */
+  border-bottom: 1px solid #ddd; /* Bottom border for cells */
+}
+
+/* Hover effect for rows */
+.reference-table tbody tr:hover {
+  background-color: #f5f5f5; /* Lighter grey background on hover */
+}
+
+/* Make the SBTn Zone column stand out */
+.reference-table tbody td:first-child {
+  font-weight: bold; /* Make the SBTn Zone text bold */
+  color: #007bff; /* Set a blue color */
+}
+
+/* Style for the Save Corrections button if it's part of the table */
+.save-corrections-btn {
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 10px; /* Spacing above the button */
+}
+
+.save-corrections-btn:hover {
+  background-color: #45a049; /* Darker green on hover */
+}
