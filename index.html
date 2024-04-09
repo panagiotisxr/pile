@@ -23,6 +23,71 @@
     </div>
     <h1>Shaft Resistance Capacity of Axially Loaded Piles</h1>
     <h2 id="myHeader2">Online Calculator</h2>
+    <!-- Instructions Icon -->
+    <div class="instructions-icon-container">
+        <img src="Instructions.jpg" id="instructionsIcon" alt="Instructions" style="cursor:pointer; width:50px; height:auto;">
+
+        <!-- The Modal -->
+        <div id="instructionsModal" class="modal">
+            <!-- Modal content -->
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>User Manual</h2>
+                
+                <h3>System Requirements</h3>
+                <p>The calculator is web-based and can be accessed through any modern web browser, including Google Chrome, Mozilla Firefox, Microsoft Edge, and Safari.</p>
+                
+                <h3>Getting Started</h3>
+
+                <h4>Uploading Data</h4>
+                <p>Select a .csv file by clicking the "Upload CSV File" button. Ensure the file follows the specified format as per the provided template, which can be downloaded here.</p>
+                
+                <h4>Entering Data Manually</h4>
+                <p>If you prefer to enter data manually, fill in the pile data, seismic coefficients, number of segments, and soil properties in the respective fields provided on the webpage.</p>
+                
+                <h3>Using the Calculator</h3>
+                <h4>Performing Calculations</h4>
+                <p>Input Data: Begin by inputting pile data and seismic coefficients. Run Analysis: Click the "Run" button to perform the calculation. Ensure all required fields are filled.</p>
+                
+                <h4>Interpreting Results</h4>
+                <p>The calculator will display the shaft resistance capacity upon completion.</p>
+                
+                <h4>Correcting Missing Data</h4>
+                <p>If missing data is detected upon CSV upload, the calculator will prompt you to fill in the missing entries. Correct the data as instructed to ensure accurate calculations.</p>
+                
+                <h3>Reference Table for Soil Properties</h3>
+                <p>The calculator provides a reference table with typical soil properties based on SBTn values to aid in data entry.</p>
+                
+                <h3>Troubleshooting</h3>
+                <p>If you encounter issues such as calculations not running or unexpected results, ensure that all data inputs are correct and in the proper format. For persistent issues, contact support using the details provided in the Contact and Support section.</p>
+                
+                <h3>FAQs</h3>
+                <p>Q: What is SBTn? A: The Soil Behavior Type number (SBTn) is a classification method derived from cone penetration test (CPT) data to describe soil behavior. Developed by Peter K. Robertson in 1990, this system aids in identifying soil properties such as cohesion, friction angle and unit weight. 
+                    Robertson's work, particularly highlighted in his 1990 publication, provides a comprehensive approach to classifying soils based on their response to CPT, facilitating better design and analysis in the field.
+
+                    Reference:
+
+                    Robertson, P.K. (1990). "Soil classification using the cone penetration test." Canadian Geotechnical Journal, 27(1), 151-158.</p>
+                <p>Q: Can I save the results? A: Currently, the results must be manually recorded as the calculator does not offer a save feature.</p>
+                
+                <h3>Glossary</h3>
+                <p>Axially Loaded Piles: Piles subjected to vertical loads along their longitudinal axis.</p>
+                <p>Cohesive-Frictional Soils: Soils that exhibit both cohesive and frictional properties.</p>
+                <p>Pseudo-Static Conditions: An approximation of dynamic effects, such as earthquake loading, as static forces.</p>
+                
+                <h3>Contact and Support</h3>
+                <p>For technical support, please contact:</p>
+                <p>Dr. Lysandros Pantelidis at lysandros.pantelidis@cut.ac.cy</p>
+                <p>Dr. Panagiotis Christodoulou at pa.christodoulou@edu.cut.ac.cy</p>
+                
+                
+                <h3>Feedback</h3>
+                <p> Please share your suggestions or report any issues to pa.christodoulou@edu.cut.ac.cy</p>
+            </div>
+            
+        </div>
+    </div>
+
     <p>By Drs<strong> <a target="_blank" rel="noopener" href="https://scholar.google.com/citations?user=u5fbtlcAAAAJ&hl=en">Lysandros Pantelidis</a> </strong> and <strong><a target="_blank" rel="noopener" href="https://scholar.google.com/citations?user=R8zAApkAAAAJ&hl=en">Panagiotis Christodoulou</a></strong></p>
     <p><strong>Cite as:</strong><a target="_blank" rel="noopener"> Pantelidis, L. (2022). Shaft resistance capacity of axially loaded piles in cohesive-frictional soils under static or pseudo-static conditions based on ground parameters.</a><a target="_blank" href="Shaft resistance capacity.pdf">(Link) </a></p>
     <div class="container">
@@ -212,7 +277,33 @@
 <div id="missingDataSection"></div>
 <!-- Placeholder for SBT reference table -->
 <div id="sbtReferenceSection"></div>
-
+<script>
+    // Get the modal
+    var modal = document.getElementById('instructionsModal');
+    
+    // Get the button that opens the modal
+    var btn = document.getElementById('instructionsIcon');
+    
+    // Get the <span> element that closes the modal
+    var span = document.getElementsByClassName('close')[0];
+    
+    // When the user clicks on the button, open the modal
+    btn.onclick = function() {
+        modal.style.display = "block";
+    }
+    
+    // When the user clicks on <span> (x), close the modal
+    span.onclick = function() {
+        modal.style.display = "none";
+    }
+    
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+    </script>
 <py-script>
 from js import document, window, alert 
 from math import sin, tan, radians, pi, sqrt, asin
