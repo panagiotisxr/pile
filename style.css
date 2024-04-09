@@ -111,3 +111,11 @@ body {
   text-decoration: none;
   cursor: pointer;
 }
+@media (max-width: 600px) {
+  h1 {
+    font-size: 20px; /* Smaller font size on small screens */
+  }
+  .save-corrections-btn {
+    padding: 12px 24px; /* Larger button for easier touch */
+  }
+}
