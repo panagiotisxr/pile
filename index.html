@@ -133,28 +133,43 @@
                     </tr>
                 </tbody>
             </table>
-            <div class="container">
-                <div class="Analysis-section">        
-                    <h2>Analysis</h2>   
-                    <table>
-                        <tbody>
-                            <tr>
-                                <td>Analysis</td>
-                                <td><button class="button" id="submit-button" type="submit" py-Click="results_python()">Run</button></td>
-                            </tr>
-                            <tr>
-                                <td>Preselected values</td>
-                                <td><button class="button" type="button" onclick="stored_values()">Preselected values</button></td>
-                            </tr>
-                            <tr>
-                                <td>Clear All </td>
-                                <td><button class="button" onclick="clearAll()">Reset </button></td>
-                            </tr>
-                        </tbody>
-                    </table>
+        </div>
+        <div class="container">
+            <div class="Analysis-section">        
+                <h2>Analysis</h2>   
+                <table>
+                    <tbody>
+                        <tr>
+                            <td>Analysis</td>
+                            <td><button class="button" id="submit-button" type="submit" py-Click="results_python()">Run</button></td>
+                        </tr>
+                        <tr>
+                            <td>Preselected values</td>
+                            <td><button class="button" type="button" onclick="stored_values()">Preselected values</button></td>
+                        </tr>
+                        <tr>
+                            <td>Clear All </td>
+                            <td><button class="button" onclick="clearAll()">Reset </button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="container">
+            <div class="enter_data">        
+                <h2>Data Entry </h2>   
+                <div class="input-method-selection">
+                    <label><input type="radio" name="dataInputMethod" value="manual" checked> Manually Enter Data</label>
+                    <label><input type="radio" name="dataInputMethod" value="upload"> Upload CSV File</label>
                 </div>
             </div>
+        </div>
 
+        <div id="manualInputSection">
+            <!-- Manual data entry fields here -->
+        </div>
+        
+        <div id="csvUploadSection" style="display: none;">
             <div class="container">
                 <div class="Upload data">        
                     <h2>Upload .csv file <span style="font-size: 0.8em;">(<a target="_blank" rel="noopener" href="Data template.csv">template</a>)</span></h2>
@@ -177,8 +192,40 @@
                         <label><input type="checkbox" id="filterFrictionAngle" checked> Filter Friction Angle (φ)</label>                       
                     </div>                   
                 </div>
-            </div>          
-                   
+            </div>       
+        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Input method radio buttons
+                const manualInputRadio = document.querySelector('input[name="dataInputMethod"][value="manual"]');
+                const uploadInputRadio = document.querySelector('input[name="dataInputMethod"][value="upload"]');
+                
+                // Sections
+                const manualInputSection = document.getElementById('manualInputSection');
+                const csvUploadSection = document.getElementById('csvUploadSection');
+                
+                // Listen for changes on radio buttons
+                manualInputRadio.addEventListener('change', toggleInputMethod);
+                uploadInputRadio.addEventListener('change', toggleInputMethod);
+                
+                // Function to show/hide sections
+                function toggleInputMethod() {
+                    if(manualInputRadio.checked) {
+                        manualInputSection.style.display = '';
+                        csvUploadSection.style.display = 'none';
+                    } else {
+                        manualInputSection.style.display = 'none';
+                        csvUploadSection.style.display = '';
+                    }
+                }
+            
+                // Initial state
+                toggleInputMethod();
+            });
+            </script>
+
+   
+        <div class="container">               
             <table>
                 <tbody>
                     <h2>Number of Segments</h2>
@@ -241,10 +288,9 @@
 
                     </script>
                 </tbody>
-            </table>
-            
-
-           
+            </table>     
+        </div>
+        <div class="container">        
             <div id="uploadStatus"></div>
             <div id="uploadResults"></div>
             <script>
@@ -508,28 +554,33 @@ def load_data():
    
 def divide_layers_into_segments(layer_parameters, num_segments):
     segmented_layers = []
+    accumulated_height = 0
 
-    accumulated_height = 0  # Initialize accumulated_height for accurate Z_UP and Z_DOWN calculation
+    # New: Incrementing layer number outside the loop
+    layer_number = 1
 
     for layer_data in layer_parameters:
         layer_Z = layer_data['Z']
         segment_height = layer_Z / num_segments
-        Z_DOWN = accumulated_height  # Initialize Z_DOWN for accurate Z_UP calculation
+        Z_DOWN = accumulated_height
 
-        for i in range(num_segments):
-            segment_data = layer_data.copy()
-            Z_UP = Z_DOWN  # Set Z_UP to previous Z_DOWN
+        for _ in range(num_segments):
+            segment_data = layer_data.copy()  # Make a copy of layer data
+            Z_UP = Z_DOWN
             Z_DOWN += segment_height
+
+            # Retain the original layer number in each segment
+            segment_data['Layer Number'] = layer_number
             segment_data['Z'] = segment_height
             segment_data['Accumulated Height'] = Z_DOWN
-            segment_data['Layer'] = layer_parameters.index(layer_data) + 1
             segment_data['Z_UP'] = Z_UP
             segmented_layers.append(segment_data)
 
-        # Update accumulated_height for the next layer
         accumulated_height = Z_DOWN
+        layer_number += 1  # Increment the layer number for the next layer
 
-    return segmented_layers    
+    return segmented_layers
+   
 
 def calculate_coefficients(pile_data, segment_data, z_value):
     if z_value == 0 or segment_data['Accumulated Height'] == 0:
@@ -626,33 +677,29 @@ def results_python():
     print("-" * len(header_row))  # Divider
 
     total_QS = 0
-    total_QS_total=0
+    total_QS_total = 0
+    
     for segment in segmented_layers:
         K_OE_up, _, _ = calculate_coefficients(pile_data, segment, segment['Z_UP'])
-        if K_OE_up  <  0:
-            K_OE_up = 0  # Set negative K_OE to zero
+        K_OE_up = max(K_OE_up, 0)  # Ensure K_OE_up is non-negative
         K_OE_down, _, _ = calculate_coefficients(pile_data, segment, segment['Accumulated Height'])
-        if K_OE_down < 0:
-            K_OE_down = 0  # Set negative K_OE to zero
-        avg_K_OE = (max(K_OE_up, 0) + max(K_OE_down, 0)) / 2
+        K_OE_down = max(K_OE_down, 0)  # Ensure K_OE_down is non-negative
+        avg_K_OE = (K_OE_up + K_OE_down) / 2
         delta_x = segment['Accumulated Height'] - segment['Z_UP']
         z_average = (segment['Z_UP'] + segment['Accumulated Height']) / 2
         QS = pi * 2 * pile_data['R'] * delta_x * pile_data['a_i'] * (segment['c'] + avg_K_OE * segment['γ'] * z_average * tan(radians(segment['φ_d'])))
         Qs_for_tot = QS / (pi * (pile_data['R'] ** 2))
-
+    
         total_QS += QS
         total_QS_total += Qs_for_tot
-
- 
-   
-
-        # Print each segment's results in a row
-        data_row = [str(segment['Layer']), f"{segment['Z_UP']:.2f}", f"{K_OE_up:.3f}", f"{segment['Accumulated Height']:.2f}",
+    
+        # Use 'Layer Number' for accurate layer identification
+        data_row = [str(segment['Layer Number']), f"{segment['Z_UP']:.2f}", f"{K_OE_up:.3f}", f"{segment['Accumulated Height']:.2f}",
                     f"{K_OE_down:.3f}", f"{avg_K_OE:.3f}", f"{delta_x:.2f}", f"{z_average:.2f}", f"{QS:.2f}"]
-        print("        ".join(data_row))
-
-    # Print total QS at the end
-    print("-" * len(header_row))  # Divider for total
+        print("    ".join(data_row))
+    
+    # Print total QS and q_s,tot at the end
+    print("-" * 80)  # Print a divider
     print(f"Total QS: {total_QS:.2f} kN")
     print(f"q_s,tot: {total_QS_total:.2f} kPa")
     
