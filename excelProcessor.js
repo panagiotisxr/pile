@@ -292,3 +292,11 @@ function createSBTReferenceTable() {
     referenceSection.appendChild(table); // Append the table to the container
 }
 
+function clearAll() {
+    document.getElementById("numLayers").value = "";
+    clearLayerData();
+}
+function clearLayerData() {
+    const tableBody = document.getElementById("layersTableBody");
+    tableBody.innerHTML = ""; // Clear existing rows
+}
