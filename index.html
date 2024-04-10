@@ -166,9 +166,26 @@
         </div>
 
         <div id="manualInputSection">
-            <!-- Manual data entry fields here -->
-        </div>
-        
+            <div class="container">
+                <div class="manualdata"> 
+                    <table>
+                         <tbody>
+                            <h2>Number of Segments</h2>
+                                <tr>
+                                 <td>Number of Segments of each layer</td>
+                                    <td><input type="number" id="num_seg" name="Number_of_segments" min="0" placeholder="e.g. 5"></td>
+                                </tr>
+                        </tbody>
+                    </table>
+            <table>
+                <tbody>
+                    <h2>Number of Layers:</h2>
+                    <input type="number" id="numLayers" min="1" onchange="generateLayerRows()">
+                </tbody>
+            </table>       
+                 </div>
+            </div>  
+        </div>        
         <div id="csvUploadSection" style="display: none;">
             <div class="container">
                 <div class="Upload data">        
@@ -222,71 +239,58 @@
                 // Initial state
                 toggleInputMethod();
             });
-            </script>
-
-   
+            </script>  
         <div class="container">               
             <table>
-                <tbody>
-                    <h2>Number of Segments</h2>
-                    <tr>
-                        <td>Number of Segments of each layer</td>
-                        <td><input type="number" id="num_seg" name="Number_of_segments" min="0" placeholder="e.g. 5"></td>
-                    </tr>
-                </tbody>
-            </table>
-            <table>
-                <tbody>
-                    <h2>Number of Layers:</h2>
-                    <input type="number" id="numLayers" min="1" onchange="generateLayerRows()">
-                    <div class="container">
-                        <h2>Soil Properties</h2>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Δz (m)</th>
-                                    <th>Cohesion, c [kPa]</th>
-                                    <th>Friction angle, φ [°­­]</th>
-                                    <th>Unit weight, γ [kN/m³]</th>
-                                    <!-- <th> SBTn (Robertson 1990)</th> -->
-                                </tr>
-                            </thead>
-                            <tbody id="layersTableBody"></tbody>
-                        </table>
-                    </div>
-                    <script>
-                        function generateLayerRows() {
-                            const numLayers = parseInt(document.getElementById("numLayers").value, 10);
-                            const tableBody = document.getElementById("layersTableBody");
-                            tableBody.innerHTML = ""; // Clear existing rows
+                <tbody>                   
+                <div class="container">
+                    <h2>Soil Properties</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Δz (m)</th>
+                                <th>Cohesion, c [kPa]</th>
+                                <th>Friction angle, φ [°­­]</th>
+                                <th>Unit weight, γ [kN/m³]</th>
+                                <!-- <th> SBTn (Robertson 1990)</th> -->
+                            </tr>
+                        </thead>
+                        <tbody id="layersTableBody"></tbody>
+                    </table>
+                </div>
+                <script>
+                    function generateLayerRows() {
+                        const numLayers = parseInt(document.getElementById("numLayers").value, 10);
+                        const tableBody = document.getElementById("layersTableBody");
+                        tableBody.innerHTML = ""; // Clear existing rows
 
-                            for (let i = 0; i < numLayers; i++) {
-                                const rowIndex = i + 1; // Adjust to 1-based index for compatibility
-                                const tr = document.createElement("tr");
+                        for (let i = 0; i < numLayers; i++) {
+                            const rowIndex = i + 1; // Adjust to 1-based index for compatibility
+                            const tr = document.createElement("tr");
 
-                                // Adjust Z cell to use 1-based indexing
-                                const zCell = document.createElement("td");
-                                zCell.innerHTML = `<input type="number" id="Z_${rowIndex}" name="Layer_Height_${rowIndex}" min="0" placeholder="e.g. 3 m" step="0.5">`;
-                                tr.appendChild(zCell);
+                            // Adjust Z cell to use 1-based indexing
+                            const zCell = document.createElement("td");
+                            zCell.innerHTML = `<input type="number" id="Z_${rowIndex}" name="Layer_Height_${rowIndex}" min="0" placeholder="e.g. 3 m" step="0.5">`;
+                            tr.appendChild(zCell);
 
-                                // Repeat for other cells, ensuring to use rowIndex for IDs
-                                const cCell = document.createElement("td");
-                                cCell.innerHTML = `<input type="number" id="c_${rowIndex}" name="Cohesion_${rowIndex}" min="0" placeholder="e.g. 20 kPa" step="5">`;
-                                tr.appendChild(cCell);
+                            // Repeat for other cells, ensuring to use rowIndex for IDs
+                            const cCell = document.createElement("td");
+                            cCell.innerHTML = `<input type="number" id="c_${rowIndex}" name="Cohesion_${rowIndex}" min="0" placeholder="e.g. 20 kPa" step="5">`;
+                            tr.appendChild(cCell);
 
-                                const phiCell = document.createElement("td");
-                                phiCell.innerHTML = `<input type="number" id="φ_${rowIndex}" name="Friction_angle_${rowIndex}" min="0" placeholder="e.g. 30 °" step="5">`;
-                                tr.appendChild(phiCell);
+                            const phiCell = document.createElement("td");
+                            phiCell.innerHTML = `<input type="number" id="φ_${rowIndex}" name="Friction_angle_${rowIndex}" min="0" placeholder="e.g. 30 °" step="5">`;
+                            tr.appendChild(phiCell);
 
-                                const gammaCell = document.createElement("td");
-                                gammaCell.innerHTML = `<input type="number" id="γ_${rowIndex}" name="Unit_Weight_${rowIndex}" min="0" placeholder="e.g. 20 kN/m³" step="5">`;
-                                tr.appendChild(gammaCell);
+                            const gammaCell = document.createElement("td");
+                            gammaCell.innerHTML = `<input type="number" id="γ_${rowIndex}" name="Unit_Weight_${rowIndex}" min="0" placeholder="e.g. 20 kN/m³" step="5">`;
+                            tr.appendChild(gammaCell);
 
-                                tableBody.appendChild(tr);
-                            }
+                            tableBody.appendChild(tr);
                         }
+                    }
 
-                    </script>
+                </script>
                 </tbody>
             </table>     
         </div>
