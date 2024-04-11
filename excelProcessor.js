@@ -27,35 +27,43 @@ function handleCSVFileUpload() {
     reader.readAsText(file);
 }
 
-function processDataFromCSV(csvData) {
-    const rows = csvData.split('\n').filter(row => row.trim());
-    globalDataset = []; // Reset for new CSV data
-    let rowsWithMissingData = []; // Track rows with missing data
-
-    rows.forEach((row, index) => {
-        // Skip the header row
-        if (index === 0) return;
-
-        const values = row.split(',');
-        const hasMissingData = values.some(value => value.trim() === "");
-        if (hasMissingData) {
-            // Save the index (1-based for user readability) of rows with missing data
-            rowsWithMissingData.push(index + 1);
+    function processDataFromCSV(csvData) {
+        const rows = csvData.split('\n').filter(row => row.trim());
+        globalDataset = []; // Reset for new CSV data
+        let rowsWithMissingData = []; // Track rows with missing data
+    
+        rows.forEach((row, index) => {
+            // Skip the header row
+            if (index === 0) return;
+    
+            // Process and round values
+            const values = row.split(',').map(value => {
+                // Attempt to convert value to a float
+                const floatValue = parseFloat(value.trim());
+                // If it's a number, round it to one decimal place; otherwise, return the original value
+                return !isNaN(floatValue) ? parseFloat(floatValue.toFixed(1)) : value.trim();
+            });
+    
+            const hasMissingData = values.some(value => value === "");
+            if (hasMissingData) {
+                // Save the index (1-based for user readability) of rows with missing data
+                rowsWithMissingData.push(index + 1);
+            }
+            // Push every row into globalDataset, including those with missing data for now
+            globalDataset.push(values);
+        });
+    
+        if (rowsWithMissingData.length > 0) {
+            // If any rows with missing data are found, handle them
+            console.log(`Missing data found in rows: ${rowsWithMissingData.join(", ")}.`);
+            document.getElementById('uploadStatus').innerHTML = `Missing data found in rows: ${rowsWithMissingData.join(", ")}. Please correct the data.`;
+            displayMissingDataRows(rowsWithMissingData);
+        } else {
+            // If no missing data, proceed to render the table
+            checkAndProcessData();
         }
-        // Push every row into globalDataset, including those with missing data for now
-        globalDataset.push(values);
-    });
-
-    if (rowsWithMissingData.length > 0) {
-        // If any rows with missing data are found, handle them
-        console.log(`Missing data found in rows: ${rowsWithMissingData.join(", ")}.`);
-        document.getElementById('uploadStatus').innerHTML = `Missing data found in rows: ${rowsWithMissingData.join(", ")}. Please correct the data.`;
-        displayMissingDataRows(rowsWithMissingData);
-    } else {
-        // If no missing data, proceed to render the table
-        checkAndProcessData();
     }
-}
+    
 
 
 function displayMissingDataRows(rowsWithMissingData) {
