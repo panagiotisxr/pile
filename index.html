@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Shaft Resistance Capacity of Axially Loaded Piles</title>
+    <link rel="icon" href="favicon.ico">
+    <link rel="stylesheet" href="style.css">
+    <!-- Updated PyScript references -->
+    <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
+    <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
+    <!-- Other libraries -->
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <!-- jQuery and Bootstrap -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Load excelProcessor.js BEFORE inline scripts that reference its functions -->
+    <script src="excelProcessor.js"></script>
+  </head>
+  <body>
+    <!-- Logo -->
+    <div class="cut">
+      <img src="cut.jpg" alt="Cut Diagram">
+    </div>
+    <!-- Titles -->
+    <h1>Shaft Resistance Capacity of Axially Loaded Piles</h1>
+    <h2 id="myHeader2">Online Calculator</h2>
+    
+    <!-- Instructions Modal and Icon -->
+    <div class="instructions-icon-container">
+      <img src="Instructions.jpg" id="instructionsIcon" alt="Instructions" style="cursor:pointer; width:50px; height:auto;">
+      <div id="instructionsModal" class="modal">
+        <div class="modal-content">
+          <span class="close">&times;</span>
+          <h2>User Manual</h2>
+          <h3>System Requirements</h3>
+          <p>The calculator is web-based and can be accessed through any modern browser.</p>
+          <!-- Additional instructions... -->
+        </div>
+      </div>
+    </div>
+    
+    <!-- Author and Citation -->
+    <p>
+      By Drs <strong>
+        <a target="_blank" rel="noopener" href="https://scholar.google.com/citations?user=u5fbtlcAAAAJ&hl=en">Lysandros Pantelidis</a>
+      </strong> and <strong>
+        <a target="_blank" rel="noopener" href="https://scholar.google.com/citations?user=R8zAApkAAAAJ&hl=en">Panagiotis Christodoulou</a>
+      </strong>
+    </p>
+    <p>
+      <strong>Cite as:</strong>
+      <a target="_blank" rel="noopener" href="Shaft resistance capacity.pdf">
+        Pantelidis, L. (2022). Shaft resistance capacity of axially loaded piles in cohesive-frictional soils under static or pseudo-static conditions based on ground parameters. (Link)
+      </a>
+    </p>
+    
+    <!-- Main Container -->
+    <div class="container">
+      <!-- Pile Data Section -->
+      <div class="data-section">
+        <h2>Pile Data</h2>
+        <table>
+          <tbody>
+            <tr>
+              <td>Pile Radius [R]</td>
+              <td>
+                <input type="number" id="R" name="Radius" min="0" placeholder="e.g. 0.5 m" step="0.1">
+              </td>
+              <td>m</td>
+            </tr>
+            <tr>
+              <td>Shear reduction coefficient [𝛼ᵢ]</td>
+              <td>
+                <input type="number" id="a_i" name="reduction_coefficient" min="0" placeholder="e.g. 1" step="0.5">
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <table>
+          <caption>Seismic Coefficients</caption>
+          <tbody>
+            <tr>
+              <td>Seismic coefficient of horizontal acceleration [α<sub>h</sub>]</td>
+              <td>
+                <input type="number" id="ah" name="Horizontal accel" placeholder="e.g. 0.3" step="0.05">
+              </td>
+            </tr>
+            <tr>
+              <td>Seismic coefficient of vertical acceleration [α<sub>v</sub>]</td>
+              <td>
+                <input type="number" id="av" name="vertical_acceleration" placeholder="e.g. 0.15" step="0.05">
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Analysis Section -->
+      <div class="container">
+        <div class="Analysis-section">
+          <h2>Analysis</h2>
+          <table>
+            <tbody>
+              <tr>
+                <td>Analysis</td>
+                <td>
+                  <button class="button" id="submit-button" type="submit" py-click="results_python">Run</button>
+                </td>
+              </tr>
+              <tr>
+                <td>Preselected values</td>
+                <td>
+                  <button class="button" type="button" onclick="stored_values()">Preselected values</button>
+                </td>
+              </tr>
+              <tr>
+                <td>Clear All</td>
+                <td>
+                  <button class="button" onclick="clearAll()">Reset</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Data Entry Method Section -->
+      <div class="container">
+        <div class="enter_data">
+          <h2>Data Entry</h2>
+          <div class="input-method-selection">
+            <label>
+              <input type="radio" name="dataInputMethod" value="manual" checked> Manually Enter Data
+            </label>
+            <label>
+              <input type="radio" name="dataInputMethod" value="upload"> Upload CSV File
+            </label>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Manual Input Section -->
+      <div id="manualInputSection">
+        <div class="container">
+          <div class="manualdata">
+            <table>
+              <caption>Number of Segments</caption>
+              <tbody>
+                <tr>
+                  <td>Number of Segments of each layer</td>
+                  <td>
+                    <input type="number" id="num_seg" name="Number_of_segments" min="0" placeholder="e.g. 5">
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <table>
+              <caption>Number of Layers:</caption>
+              <tbody>
+                <tr>
+                  <td>
+                    <!-- Removed inline onchange -->
+                    <input type="number" id="numLayers" min="1">
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      
+      <!-- CSV Upload Section (initially hidden) -->
+      <div id="csvUploadSection" style="display: none;">
+        <div class="container">
+          <div class="Upload data">
+            <h2>Upload .csv file 
+              <span style="font-size: 0.8em;">(<a target="_blank" rel="noopener" href="Data template.csv">template</a>)</span>
+            </h2>
+            <div class="upload-container">
+              <label for="csvFile">Upload CSV File</label>
+              <input type="file" id="csvFile" accept=".csv" />
+              <button type="button" onclick="handleCSVFileUpload()">Upload</button>
+            </div>
+            <div class="filtering-container">
+              <label>Data Filtering</label>
+              <input type="radio" id="filterYes" name="filterOption" value="yes">
+              <label for="filterYes">Yes</label>
+              <input type="radio" id="filterNo" name="filterOption" value="no" checked>
+              <label for="filterNo">No</label>
+            </div>
+            <div id="subgroupInput" style="display: none;">
+              <label for="numSubgroups">Number of Subgroups:</label>
+              <input type="number" id="numSubgroups" min="2" placeholder="e.g. 5 (preselected)">
+              <label><input type="checkbox" id="filterCohesion" checked> Filter Cohesion (c)</label>
+              <label><input type="checkbox" id="filterFrictionAngle" checked> Filter Friction Angle (φ)</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Soil Properties Section -->
+      <div class="container">
+        <div class="container">
+          <h2>Soil Properties</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Δz (m)</th>
+                <th>Cohesion, c [kPa]</th>
+                <th>Friction angle, φ [°]</th>
+                <th>Unit weight, γ [kN/m³]</th>
+              </tr>
+            </thead>
+            <tbody id="layersTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Preselected Values & Output Section -->
+      <div class="container">
+        <div id="uploadStatus"></div>
+        <div id="uploadResults"></div>
+        <script>
+          function stored_values() {
+            document.getElementById("R").value = "0.5";
+            document.getElementById("ah").value = "0.3";
+            document.getElementById("av").value = "0.15";
+            document.getElementById("a_i").value = "1";
+            document.getElementById("num_seg").value = "5";
+            document.getElementById("numLayers").value = "2";
+            // Dispatch a change event to trigger generateLayerRows
+            var numLayersInput = document.getElementById("numLayers");
+            var event;
+            if (typeof(Event) === 'function') {
+              event = new Event('change');
+            } else {
+              event = document.createEvent('Event');
+              event.initEvent('change', true, true);
+            }
+            numLayersInput.dispatchEvent(event);
+          }
+        </script>
+      </div>
+      
+      <!-- Containers for Missing Data and SBT Reference -->
+      <div id="missingDataSection"></div>
+      <div id="sbtReferenceSection"></div>
+      
+    </div>
+    
+    <!-- Toggle Script for Data Entry Method -->
+    <script>
+      const manualInputRadio = document.querySelector('input[name="dataInputMethod"][value="manual"]');
+      const uploadInputRadio = document.querySelector('input[name="dataInputMethod"][value="upload"]');
+      const manualInputSection = document.getElementById('manualInputSection');
+      const csvUploadSection = document.getElementById('csvUploadSection');
+
+      function toggleInputMethod() {
+        if (manualInputRadio.checked) {
+          manualInputSection.style.display = '';
+          csvUploadSection.style.display = 'none';
+        } else {
+          manualInputSection.style.display = 'none';
+          csvUploadSection.style.display = '';
+        }
+      }
+
+      manualInputRadio.addEventListener('change', toggleInputMethod);
+      uploadInputRadio.addEventListener('change', toggleInputMethod);
+      // Set initial state
+      toggleInputMethod();
+    </script>
+    
+    <!-- Attach generateLayerRows event after DOM loads using window.generateLayerRows -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function(){
+        var numLayersInput = document.getElementById("numLayers");
+        // Use window.generateLayerRows (should be defined in excelProcessor.js)
+        numLayersInput.addEventListener('change', window.generateLayerRows);
+      });
+    </script>
+    
+    <!-- Instructions Modal Script -->
+    <script>
+      var modal = document.getElementById('instructionsModal');
+      var btn = document.getElementById('instructionsIcon');
+      var span = document.getElementsByClassName('close')[0];
+
+      btn.onclick = function() {
+        modal.style.display = "block";
+      };
+      span.onclick = function() {
+        modal.style.display = "none";
+      };
+      window.onclick = function(event) {
+        if (event.target == modal) {
+          modal.style.display = "none";
+        }
+      };
+    </script>
+    
+    <!-- Reference to the Python file for pile calculations -->
+    <script type="py" src="pile.py"></script>
+  </body>
+</html>
